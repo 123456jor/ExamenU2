@@ -1,0 +1,217 @@
+services:
+  db-personas:
+    image: postgres:16-alpine
+    container_name: db-personas
+    environment:
+      POSTGRES_DB: ca_personas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_personas_data:/var/lib/postgresql/data
+
+  db-recursos:
+    image: postgres:16-alpine
+    container_name: db-recursos
+    environment:
+      POSTGRES_DB: ca_recursos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - db_recursos_data:/var/lib/postgresql/data
+
+  db-solicitudes:
+    image: postgres:16-alpine
+    container_name: db-solicitudes
+    environment:
+      POSTGRES_DB: ca_solicitudes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - db_solicitudes_data:/var/lib/postgresql/data
+
+  db-agendamiento:
+    image: postgres:16-alpine
+    container_name: db-agendamiento
+    environment:
+      POSTGRES_DB: ca_agendamiento
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - db_agendamiento_data:/var/lib/postgresql/data
+
+  db-penalidades:
+    image: postgres:16-alpine
+    container_name: db-penalidades
+    environment:
+      POSTGRES_DB: ca_penalidades
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - db_penalidades_data:/var/lib/postgresql/data
+
+  db-mensajes:
+    image: postgres:16-alpine
+    container_name: db-mensajes
+    environment:
+      POSTGRES_DB: ca_mensajes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5438:5432"
+    volumes:
+      - db_mensajes_data:/var/lib/postgresql/data
+
+  ms-ca-discovery:
+    build:
+      context: .
+      dockerfile: ./ms-ca-discovery/Dockerfile
+    container_name: ms-ca-discovery
+    ports:
+      - "8761:8761"
+
+  ms-ca-config:
+    build:
+      context: .
+      dockerfile: ./ms-ca-config/Dockerfile
+    container_name: ms-ca-config
+    environment:
+      EUREKA_URL: http://ms-ca-discovery:8761/eureka/
+    ports:
+      - "8888:8888"
+    depends_on:
+      - ms-ca-discovery
+
+  ms-ca-edge:
+    build:
+      context: .
+      dockerfile: ./ms-ca-edge/Dockerfile
+    container_name: ms-ca-edge
+    environment:
+      CONFIG_SERVER_URL: http://ms-ca-config:8888
+      EUREKA_URL: http://ms-ca-discovery:8761/eureka/
+    ports:
+      - "8090:8090"
+    depends_on:
+      - ms-ca-config
+      - ms-ca-discovery
+
+  ms-ca-personas:
+    build:
+      context: .
+      dockerfile: ./ms-ca-personas/Dockerfile
+    container_name: ms-ca-personas
+    environment:
+      CONFIG_SERVER_URL: http://ms-ca-config:8888
+      EUREKA_URL: http://ms-ca-discovery:8761/eureka/
+      DB_HOST: db-personas
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - db-personas
+      - ms-ca-config
+      - ms-ca-discovery
+
+  ms-ca-recursos:
+    build:
+      context: .
+      dockerfile: ./ms-ca-recursos/Dockerfile
+    container_name: ms-ca-recursos
+    environment:
+      CONFIG_SERVER_URL: http://ms-ca-config:8888
+      EUREKA_URL: http://ms-ca-discovery:8761/eureka/
+      DB_HOST: db-recursos
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - db-recursos
+      - ms-ca-config
+      - ms-ca-discovery
+
+  ms-ca-solicitudes:
+    build:
+      context: .
+      dockerfile: ./ms-ca-solicitudes/Dockerfile
+    container_name: ms-ca-solicitudes
+    environment:
+      CONFIG_SERVER_URL: http://ms-ca-config:8888
+      EUREKA_URL: http://ms-ca-discovery:8761/eureka/
+      DB_HOST: db-solicitudes
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - db-solicitudes
+      - ms-ca-recursos
+      - ms-ca-config
+      - ms-ca-discovery
+
+  ms-ca-agendamiento:
+    build:
+      context: .
+      dockerfile: ./ms-ca-agendamiento/Dockerfile
+    container_name: ms-ca-agendamiento
+    environment:
+      CONFIG_SERVER_URL: http://ms-ca-config:8888
+      EUREKA_URL: http://ms-ca-discovery:8761/eureka/
+      DB_HOST: db-agendamiento
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - db-agendamiento
+      - ms-ca-config
+      - ms-ca-discovery
+
+  ms-ca-penalidades:
+    build:
+      context: .
+      dockerfile: ./ms-ca-penalidades/Dockerfile
+    container_name: ms-ca-penalidades
+    environment:
+      CONFIG_SERVER_URL: http://ms-ca-config:8888
+      EUREKA_URL: http://ms-ca-discovery:8761/eureka/
+      DB_HOST: db-penalidades
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - db-penalidades
+      - ms-ca-config
+      - ms-ca-discovery
+
+  ms-ca-mensajes:
+    build:
+      context: .
+      dockerfile: ./ms-ca-mensajes/Dockerfile
+    container_name: ms-ca-mensajes
+    environment:
+      CONFIG_SERVER_URL: http://ms-ca-config:8888
+      EUREKA_URL: http://ms-ca-discovery:8761/eureka/
+      DB_HOST: db-mensajes
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - db-mensajes
+      - ms-ca-config
+      - ms-ca-discovery
+
+volumes:
+  db_personas_data:
+  db_recursos_data:
+  db_solicitudes_data:
+  db_agendamiento_data:
+  db_penalidades_data:
+  db_mensajes_data:
